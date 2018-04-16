@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: echo-server
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-server
+spec:
+  ports:
+  - port: 5678
+  selector:
+    app: echo-server
+  clusterIP: 32001
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  namespace: test
+  name: echo-server
+spec:
+  selector:
+    matchLabels:
+      app: echo-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: echo-server
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: echo-server
+          image: http-echo
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5678
+          ports:
+            - containerPort: 5678
+          resources:
+            limits:
+              memory: "128M"
+            requests:
+              memory: "128M"
+
