@@ -17,7 +17,7 @@ metadata:
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  namespace: test
+  namespace: echo-server
   name: echo-server
 spec:
   selector:
