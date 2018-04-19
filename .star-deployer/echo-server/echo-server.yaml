@@ -21,6 +21,8 @@ kind: Deployment
 metadata:
   namespace: routing
   name: echo-server
+spec:
+  selector:
     matchLabels:
       app: echo-server
   replicas: 1
