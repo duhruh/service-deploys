@@ -32,7 +32,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: echo-server
-          image: http-echo
+          image: hashicorp/http-echo:latest
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
