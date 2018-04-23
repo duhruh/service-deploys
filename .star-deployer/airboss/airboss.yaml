@@ -1,0 +1,28 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: airboss
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: airboss
+            image: dckr/airboss:6
+            imagePullPolicy: Always
+            env:
+            - name: UCP_URL
+              value: "{{{ env UCP_ROOT_URL }}}"
+          #   volumeMounts:
+          #   - name: airboss-credentials
+          #     readOnly: true
+          #     mountPath: "/credentials"
+          # volumes:
+          # - name: airboss-credentials
+          #   secret:
+          #     secretName: airboss-credentials
+          restartPolicy: Never
+          imagePullSecrets:
+          - name: dckrio-hub-credentials
