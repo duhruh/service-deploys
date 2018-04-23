@@ -14,7 +14,7 @@ spec:
             imagePullPolicy: Always
             env:
             - name: UCP_URL
-              value: "{{{ env UCP_ROOT_URL }}}"
+              value: "{{ env UCP_ROOT_URL }}"
           #   volumeMounts:
           #   - name: airboss-credentials
           #     readOnly: true
