@@ -37,7 +37,7 @@ spec:
           image: hashicorp/http-echo:latest
           imagePullPolicy: Always
           args:
-            - -text
+            - '-text'
             - 'I\'ve been automatically deployed by star-deployer!'
           env:
             - name: PASS_TEST
