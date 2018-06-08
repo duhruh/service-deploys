@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - mode: host
+        protocol: tcp
+        target: 80
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+      labels:
+        com.docker.ucp.access.label: "/infra"
+      resources:
+        limits:
+            memory: 128M
+        reservations:
+            memory: 128M
+    environment:
+      SERVICE_NAME: infra-haproxy-test

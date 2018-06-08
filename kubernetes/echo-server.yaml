@@ -1,26 +1,24 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: routing
----
-apiVersion: v1
 kind: Service
 metadata:
   name: echo-server
-  namespace: routing
+  namespace: infra
+  labels:
+    app: echo-server
 spec:
+  type: NodePort
   ports:
-  - port: 5678
-    targetPort: 5678
-    protocol: TCP
+    - port: 5678
   selector:
     app: echo-server
+
 ---
+
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  namespace: routing
   name: echo-server
+  namespace: infra
 spec:
   selector:
     matchLabels:
@@ -37,9 +35,6 @@ spec:
           image: hashicorp/http-echo:latest
           imagePullPolicy: Always
           args: ['-text', 'This was deployed by star-deployer!']
-          env:
-            - name: PASS_TEST
-              value: '{{ pass("infra/aws/ahokanson-us-east-1/elastic-co/logstash/username") }}'
           livenessProbe:
             httpGet:
               path: /
