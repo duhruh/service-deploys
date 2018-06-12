@@ -21,4 +21,4 @@ services:
         reservations:
             memory: 128M
     environment:
-      SERVICE_NAME: infra-haproxy-test
+      SERVICE_NAME: infra-haproxy-test-routing

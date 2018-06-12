@@ -1,46 +1,49 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: echo-server
-  namespace: infra
+  name: infra-haproxy-test-routing
+  namespace: infra-k8s
   labels:
-    app: echo-server
+    app: infra-haproxy-test-routing
 spec:
   type: NodePort
   ports:
-    - port: 5678
+    - port: 80
+      nodePort: 32771
   selector:
-    app: echo-server
+    app: infra-haproxy-test-routing
 
 ---
 
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: echo-server
-  namespace: infra
+  name: infra-haproxy-test-routing
+  namespace: infra-k8s
 spec:
   selector:
     matchLabels:
-      app: echo-server
+      app: infra-haproxy-test-routing
   replicas: 1
   template:
     metadata:
       labels:
-        app: echo-server
+        app: infra-haproxy-test-routing
     spec:
       restartPolicy: Always
       containers:
-        - name: echo-server
-          image: hashicorp/http-echo:latest
+        - name: web
+          image: nginx:latest
           imagePullPolicy: Always
-          args: ['-text', 'This was deployed by star-deployer!']
+          env:
+            - name: SERVICE_NAME
+              value: infra-haproxy-test-routing
           livenessProbe:
             httpGet:
               path: /
-              port: 5678
+              port: 80
           ports:
-            - containerPort: 5678
+            - containerPort: 80
           resources:
             limits:
               memory: "128M"
