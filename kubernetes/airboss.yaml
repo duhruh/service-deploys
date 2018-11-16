@@ -20,13 +20,14 @@ metadata:
   namespace: infra-k8s
 spec:
   schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
         spec:
           containers:
           - name: airboss
-            image: dckr/airboss:6
+            image: dckr/airboss:v8
             imagePullPolicy: Always
             env:
             - name: UCP_URL
