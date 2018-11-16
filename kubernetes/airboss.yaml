@@ -19,7 +19,7 @@ metadata:
   name: airboss
   namespace: infra-k8s
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "*/1 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -28,12 +28,14 @@ spec:
           containers:
           - name: airboss
             image: dckr/airboss:v8
-            imagePullPolicy: Always
-            env:
-              - name: UCP_URL
-                value: '{{ UCP_ROOT_URL }}'
-              - name: FOO
-                value: BAR
+            args:
+              - --ucp-url=https://ucp.stage-us-east-1.aws.dckr.io:443
+              - --ucp-http-connect-timeout=3
+              - --ucp-http-read-timeout=27
+              - --blacklist=dtr,manager,default,kube-public,kube-system
+              - --remove-dead-nodes
+              - --verbosity=4
+              - --aws-verbosity=3
             volumeMounts:
               - name: ucp-credentials
                 readOnly: true
@@ -45,3 +47,4 @@ spec:
           restartPolicy: Never
           imagePullSecrets:
             - name: dckrio-hub-credentials
+
