@@ -17,6 +17,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: airboss
+  namespace: infra-k8s
 spec:
   schedule: "*/5 * * * *"
   jobTemplate:
@@ -30,14 +31,14 @@ spec:
             env:
             - name: UCP_URL
               value: '{{ UCP_ROOT_URL }}'
-          #   volumeMounts:
-          #   - name: ucp-credentials
-          #     readOnly: true
-          #     mountPath: "/credentials"
-          # volumes:
-          # - name: ucp-credentials
-          #   secret:
-          #     secretName: ucp-credentials
+            volumeMounts:
+            - name: ucp-credentials
+              readOnly: true
+              mountPath: "/credentials"
+          volumes:
+          - name: ucp-credentials
+            secret:
+              secretName: ucp-credentials
           restartPolicy: Never
           imagePullSecrets:
           - name: dckrio-hub-credentials
