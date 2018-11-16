@@ -1,4 +1,4 @@
-{% set ucp_creds | base64 %}
+{% set ucp_creds | b64encode %}
 {"username":"admin","password":"{{ pass infra/aws/ahokanson-us-east-1/swarm/ucp/password }}"}
 {% endset %}
 
