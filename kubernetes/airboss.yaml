@@ -30,16 +30,18 @@ spec:
             image: dckr/airboss:v8
             imagePullPolicy: Always
             env:
-            - name: UCP_URL
-              value: '{{ UCP_ROOT_URL }}'
+              - name: UCP_URL
+                value: '{{ UCP_ROOT_URL }}'
+              - name: FOO
+                value: BAR
             volumeMounts:
-            - name: ucp-credentials
-              readOnly: true
-              mountPath: "/credentials"
+              - name: ucp-credentials
+                readOnly: true
+                mountPath: "/credentials"
           volumes:
-          - name: ucp-credentials
-            secret:
-              secretName: ucp-credentials
+            - name: ucp-credentials
+              secret:
+                secretName: ucp-credentials
           restartPolicy: Never
           imagePullSecrets:
-          - name: dckrio-hub-credentials
+            - name: dckrio-hub-credentials
