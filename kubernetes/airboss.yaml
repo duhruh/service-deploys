@@ -1,11 +1,15 @@
+{% set ucp_creds | base64 %}
+{"username":"admin","password":"{{ pass infra/aws/ahokanson-us-east-1/swarm/ucp/password }}"}
+{% endset %}
+
 apiVersion: v1
 kind: Secret
 metadata:
-    name: saltstack-github-credentials
+    name: ucp-credentials
     namespace: infra-k8s
 type: Opaque
 data:
-    credentials: {{ '{"username":"admin","password":"{{ pass infra/aws/ahokanson-us-east-1/swarm/ucp/password }}"}' | b64encode }}
+    credentials: {{ ucp_creds }}
 
 ---
 
@@ -27,13 +31,13 @@ spec:
             - name: UCP_URL
               value: '{{ UCP_ROOT_URL }}'
           #   volumeMounts:
-          #   - name: airboss-credentials
+          #   - name: ucp-credentials
           #     readOnly: true
           #     mountPath: "/credentials"
           # volumes:
-          # - name: airboss-credentials
+          # - name: ucp-credentials
           #   secret:
-          #     secretName: airboss-credentials
+          #     secretName: ucp-credentials
           restartPolicy: Never
           imagePullSecrets:
           - name: dckrio-hub-credentials
