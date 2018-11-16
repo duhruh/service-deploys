@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: saltstack-github-credentials
+    namespace: infra-k8s
+type: Opaque
+data:
+    credentials: {{ '{"username":"admin","password":"{{ pass infra/aws/ahokanson-us-east-1/swarm/ucp/password }}"}' | b64encode }}
+
+---
+
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
