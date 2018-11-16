@@ -1,5 +1,5 @@
 {% set ucp_creds | b64encode %}
-{"username":"admin","password":"{{ pass(infra/aws/ahokanson-us-east-1/swarm/ucp/password) }}"}
+{"username":"admin","password":"{{ pass('infra/aws/ahokanson-us-east-1/swarm/ucp/password') }}"}
 {% endset %}
 
 apiVersion: v1
