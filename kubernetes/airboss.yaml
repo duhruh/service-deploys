@@ -1,5 +1,5 @@
 {% set ucp_creds | b64encode %}
-{"username":"admin","password":"{{ pass('infra/aws/ahokanson-us-east-1/swarm/ucp/password') }}"}
+{"username":"admin","password":"{{ pass('infra/aws/' + env_name + '/swarm/ucp/password') }}"}
 {% endset %}
 
 apiVersion: v1
@@ -29,7 +29,7 @@ spec:
         spec:
           containers:
           - name: airboss
-            image: dckr/airboss:v8
+            image: dckr/airboss:v9
             args:
               - --ucp-url {{ ucp_root_url }}
               - --ucp-http-connect-timeout 3

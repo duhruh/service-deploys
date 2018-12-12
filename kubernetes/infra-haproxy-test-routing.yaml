@@ -38,6 +38,10 @@ spec:
           env:
             - name: SERVICE_NAME
               value: infra-haproxy-test-routing
+            - name: env_name
+              value: {{ env_name }} # us-east-1, stage-us-east-1, corp-us-east-1
+            - name: env_short_name
+              value: {{ env_short_name}} # prod, stage, corp
           livenessProbe:
             httpGet:
               path: /
