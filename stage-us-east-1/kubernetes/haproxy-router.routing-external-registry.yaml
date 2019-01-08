@@ -103,13 +103,13 @@ spec:
               path: /haproxy?monitor
               port: 35080
             initialDelaySeconds: 15
-            periodSeconds: 1
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /haproxy?monitor
               port: 35080
             initialDelaySeconds: 15
-            periodSeconds: 1
+            periodSeconds: 5
           env:
             - name: SERVICE_NAME
               value: infra-haproxy
@@ -214,18 +214,12 @@ spec:
           ports:
             - containerPort: 3903
               hostPort: 3903
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 3903
-            initialDelaySeconds: 90
-            periodSeconds: 1
           livenessProbe:
             httpGet:
               path: /healthz
               port: 3903
             initialDelaySeconds: 90
-            periodSeconds: 1
+            periodSeconds: 15
           env:
             - name: LOG_FILE
               value: /var/log/logstash/haproxy/access.log
@@ -248,18 +242,12 @@ spec:
             - "-f"
             - "/etc/logstash/logstash.conf"
             - "--config.reload.automatic"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 9600
-            initialDelaySeconds: 60
-            periodSeconds: 1
           livenessProbe:
             httpGet:
               path: /
               port: 9600
-            initialDelaySeconds: 60
-            periodSeconds: 1
+            initialDelaySeconds: 600
+            periodSeconds: 15
           resources:
             limits:
               cpu: 2000m
@@ -321,18 +309,12 @@ spec:
           ports:
             - containerPort: 9101
               hostPort: 9101
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 9101
-            initialDelaySeconds: 5
-            periodSeconds: 1
           livenessProbe:
             httpGet:
               path: /healthz
               port: 9101
-            initialDelaySeconds: 5
-            periodSeconds: 1
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             limits:
               cpu: 50m
