@@ -1,0 +1,59 @@
+{% set ucp_creds | b64encode %}
+{"username":"admin","password":"{{ pass('infra/aws/' + env_name + '/swarm/ucp/password') }}"}
+{% endset %}
+
+apiVersion: v1
+kind: Secret
+metadata:
+    name: ucp-credentials
+    namespace: infra-k8s
+type: Opaque
+data:
+    credentials: {{ ucp_creds }}
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: airboss
+  namespace: infra-k8s
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: airboss
+            image: dckr/airboss:v9
+            args:
+              - --ucp-url {{ ucp_root_url }}
+              - --ucp-http-connect-timeout 3
+              - --ucp-http-read-timeout 27
+              - --blacklist dtr,manager,default,kube-public,kube-system
+              - --remove-dead-nodes
+              - --verbosity 4
+              - --aws-verbosity 3
+            volumeMounts:
+              - name: ucp-credentials
+                readOnly: true
+                mountPath: "/credentials"
+            resources:
+              requests:
+                memory: 128Mi
+                cpu: 100m
+              limits:
+                memory: 128Mi
+                cpu: 250m
+          volumes:
+            - name: ucp-credentials
+              secret:
+                secretName: ucp-credentials
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: dckrio-hub-credentials
+

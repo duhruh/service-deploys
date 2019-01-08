@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: infra-haproxy-test-routing
+  namespace: infra-k8s
+  labels:
+    app: infra-haproxy-test-routing
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      nodePort: 32771
+  selector:
+    app: infra-haproxy-test-routing
+
+---
+
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: infra-haproxy-test-routing
+  namespace: infra-k8s
+spec:
+  selector:
+    matchLabels:
+      app: infra-haproxy-test-routing
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: infra-haproxy-test-routing
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: web
+          image: nginx:latest
+          imagePullPolicy: Always
+          env:
+            - name: SERVICE_NAME
+              value: infra-haproxy-test-routing
+            - name: env_name
+              value: {{ env_name }} # us-east-1, stage-us-east-1, corp-us-east-1
+            - name: env_short_name
+              value: {{ env_short_name}} # prod, stage, corp
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 250m
+              memory: 64Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+
