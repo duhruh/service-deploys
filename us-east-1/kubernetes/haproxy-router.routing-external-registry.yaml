@@ -1,0 +1,345 @@
+---
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  name: haproxy-router
+  namespace: routing-external-registry
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: haproxy-router
+  template:
+    metadata:
+      labels:
+        name: haproxy-router
+      annotations:
+        prometheus.io/scrape: "true"
+    spec:
+      # this is needed because the Daemonset controller bypasses normal scheduling
+      # controllers in Kubernetes. This way we have a daemonset restricted to a
+      # specific namespace
+      nodeSelector:
+        com.docker.ucp.collection.routing-external-registry: "true"
+      imagePullSecrets:
+      - name: dckrio-hub-credentials
+      restartPolicy: Always
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      volumes:
+        - name: haproxy-config
+          emptyDir: {}
+        - name: dynamic-templates
+          emptyDir: {}
+        - name: logstash-config
+          emptyDir: {}
+        - name: logstash-logs
+          emptyDir: {}
+        - name: var-run-dir
+          emptyDir: {}
+        - name: prometheus-text-exporter
+          hostPath:
+            path: /var/run/prometheus
+            type: DirectoryOrCreate
+
+      initContainers:
+        - name: s3-reload-init
+          image: dckr/haproxy-s3-reload:v4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: INTERVAL
+              value: "once"
+            - name: HAPROXY_TMPL_OUTPUT_DIR
+              value: "/dynamic-templates"
+            - name: BLOCKED_IPS_OUTPUT_DIR
+              value: "/haproxy-config/geoips/blocked-ips.lst"
+            - name: BLOCKED_IPS_S3_PATH
+              value: "s3://docker-geoip/blocked-ips.lst"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 100M
+            requests:
+              cpu: 250m
+              memory: 100M
+          volumeMounts:
+            - name: dynamic-templates
+              mountPath: /dynamic-templates
+            - name: haproxy-config
+              mountPath: /haproxy-config
+        - name: consul-template-init
+          image: dckr/haproxy-consul-template:v6
+          imagePullPolicy: IfNotPresent
+          args: ['-once'] #, '-log-level=trace']
+          env:
+            - name: ENV_SFX
+              value: ""
+            - name: CONFIG_DOMAIN
+              value: us-east-1.aws.dckr.io
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250M
+            requests:
+              cpu: 50m
+              memory: 250M
+          volumeMounts:
+            - name: haproxy-config
+              mountPath: /consul-template/data/haproxy
+            - name: logstash-config
+              mountPath: /consul-template/data/logstash
+            - name: dynamic-templates
+              mountPath: /consul-template/dynamic-templates
+            - name: prometheus-text-exporter
+              mountPath: /var/run/prometheus
+
+      containers:
+        - name: haproxy
+          image: dckr/haproxy-haproxy:v3
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            httpGet:
+              path: /haproxy?monitor
+              port: 35080
+            initialDelaySeconds: 15
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /haproxy?monitor
+              port: 35080
+            initialDelaySeconds: 15
+            periodSeconds: 1
+          env:
+            - name: SERVICE_NAME
+              value: infra-haproxy
+          ports:
+            - containerPort: 34999
+              hostPort: 34999
+            - containerPort: 35000
+              hostPort: 35000
+            - containerPort: 35080
+              hostPort: 35080
+            - containerPort: 35001
+              hostPort: 35001
+            - containerPort: 35002
+              hostPort: 35002
+            - containerPort: 35003
+              hostPort: 35003
+            - containerPort: 35005
+              hostPort: 35005
+            - containerPort: 35006
+              hostPort: 35006
+            - containerPort: 35007
+              hostPort: 35007
+            - containerPort: 35050
+              hostPort: 35050
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 500M
+            requests:
+              cpu: 1000m
+              memory: 500M
+          volumeMounts:
+            - name: haproxy-config
+              mountPath: /etc/haproxy/dynamic
+            - name: prometheus-text-exporter
+              mountPath: /var/run/prometheus
+            - name: var-run-dir
+              mountPath: /var/run/haproxy
+          # so HAProxy can modify FD limits as needed
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - IPC_LOCK
+                - SYS_RESOURCE
+
+        - name: s3-reload
+          image: dckr/haproxy-s3-reload:v4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: INTERVAL
+              value: "30"
+            - name: HAPROXY_TMPL_OUTPUT_DIR
+              value: "/dynamic-templates"
+            - name: BLOCKED_IPS_OUTPUT_DIR
+              value: "/haproxy-config/geoips/blocked-ips.lst"
+            - name: BLOCKED_IPS_S3_PATH
+              value: "s3://docker-geoip/blocked-ips.lst"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 100M
+            requests:
+              cpu: 250m
+              memory: 100M
+          volumeMounts:
+            - name: dynamic-templates
+              mountPath: /dynamic-templates
+            - name: haproxy-config
+              mountPath: /haproxy-config
+
+        - name: consul-template
+          image: dckr/haproxy-consul-template:v6
+          imagePullPolicy: IfNotPresent
+          # args: ['-log-level=trace']
+          env:
+            - name: ENV_SFX
+              value: ""
+            - name: CONFIG_DOMAIN
+              value: us-east-1.aws.dckr.io
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250M
+            requests:
+              cpu: 50m
+              memory: 250M
+          volumeMounts:
+            - name: haproxy-config
+              mountPath: /consul-template/data/haproxy
+            - name: logstash-config
+              mountPath: /consul-template/data/logstash
+            - name: dynamic-templates
+              mountPath: /consul-template/dynamic-templates
+            - name: prometheus-text-exporter
+              mountPath: /var/run/prometheus
+
+        - name: mtail
+          image: dckr/haproxy-mtail:v5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3903
+              hostPort: 3903
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3903
+            initialDelaySeconds: 90
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3903
+            initialDelaySeconds: 90
+            periodSeconds: 1
+          env:
+            - name: LOG_FILE
+              value: /var/log/logstash/haproxy/access.log
+          resources:
+            limits:
+              cpu: 750m
+              memory: 50M
+            requests:
+              cpu: 500m
+              memory: 50M
+          volumeMounts:
+            - name: logstash-logs
+              mountPath: /var/log/logstash
+
+        - name: logstash
+          image: dckr/haproxy-logstash-engine:v2
+          imagePullPolicy: IfNotPresent
+          command:
+            - "logstash"
+            - "-f"
+            - "/etc/logstash/logstash.conf"
+            - "--config.reload.automatic"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9600
+            initialDelaySeconds: 60
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9600
+            initialDelaySeconds: 60
+            periodSeconds: 1
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2.5G
+            requests:
+              cpu: 1000m
+              memory: 2.5G
+          volumeMounts:
+            - name: logstash-logs
+              mountPath: /var/log/logstash
+            - name: logstash-config
+              mountPath: /etc/logstash
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+
+        - name: logrotate
+          image: blacklabelops/logrotate:1.3
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOGS_DIRECTORIES
+              value: "/var/log/logstash/haproxy"
+            - name: LOGROTATE_CRONSCHEDULE
+              value: "0 */1 * * * *"
+            - name: LOGROTATE_INTERVAL
+              value: "hourly"
+            - name: LOGROTATE_LOGFILE
+              value: "/var/log/logstash/logrotate.log"
+            - name: LOGROTATE_PARAMETERS
+              value: "v"
+            - name: LOG_FILE
+              value: "/var/log/logstash/cron.log"
+            - name: LOGROTATE_COPIES
+              value: "10"
+            - name: LOGROTATE_SIZE
+              value: "50M"
+            - name: LOGROTATE_COMPRESSION
+              value: "compress"
+            - name: LOGROTATE_DELAYCOMPRESS
+              value: "false"
+          resources:
+            limits:
+              cpu: 50m
+              memory: 100M
+            requests:
+              cpu: 50m
+              memory: 100M
+          volumeMounts:
+            - name: logstash-logs
+              mountPath: /var/log/logstash
+
+        - name: haproxy-exporter
+          image: prom/haproxy-exporter:v0.9.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/bin/haproxy_exporter"
+            - "--haproxy.pid-file=/var/run/haproxy/haproxy.pid"
+            - "--haproxy.scrape-uri=http://127.0.0.1:35000/;csv"
+          ports:
+            - containerPort: 9101
+              hostPort: 9101
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9101
+            initialDelaySeconds: 5
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9101
+            initialDelaySeconds: 5
+            periodSeconds: 1
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50M
+            requests:
+              cpu: 50m
+              memory: 50M
+          volumeMounts:
+            - name: var-run-dir
+              mountPath: /var/run/haproxy

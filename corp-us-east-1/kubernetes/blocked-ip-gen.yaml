@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: haproxy-blocked-ip-gen
+  namespace: routing-external-default
+spec:
+  selector:
+    matchLabels:
+      app: haproxy-blocked-ip-gen
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: haproxy-blocked-ip-gen
+      annotations:
+        prometheus.io/scrape: "false"
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: dckrio-hub-credentials
+      restartPolicy: Always
+      volumes:
+        - name: prometheus-text-exporter
+          hostPath:
+            path: /var/run/prometheus
+            type: DirectoryOrCreate
+
+      containers:
+        - name: consul-template
+          image: dckr/haproxy-blocked-ip-gen:v2
+          imagePullPolicy: IfNotPresent
+          # args: ['-log-level=trace']
+          resources:
+            limits:
+              cpu: 250m
+              memory: 750M
+            requests:
+              cpu: 50m
+              memory: 750M
+          volumeMounts:
+            - name: prometheus-text-exporter
+              mountPath: /var/run/prometheus
