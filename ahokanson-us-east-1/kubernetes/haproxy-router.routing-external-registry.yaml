@@ -3,6 +3,7 @@ apiVersion: apps/v1beta2
 kind: DaemonSet
 metadata:
   name: haproxy-router
+  namespace: routing-external-registry
 spec:
   updateStrategy:
     type: RollingUpdate
