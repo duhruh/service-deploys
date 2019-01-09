@@ -1,0 +1,28 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: logstash-backup-verification
+  namespace: infra-k8s
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: prometheus-node-exporter
+            hostPath:
+              path: /var/run/prometheus
+              type: DirectoryOrCreate
+          containers:
+          - name: logstash-backup-verification
+            image: dckr/logstash-backup-verification:v4
+            args:
+              - --verbosity=3
+            volumeMounts:
+            - name: prometheus-node-exporter
+              mountPath: /var/run/prometheus
+          restartPolicy: Never
+          imagePullSecrets:
+          - name: dckrio-hub-credentials
