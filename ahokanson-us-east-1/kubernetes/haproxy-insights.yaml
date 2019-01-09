@@ -36,14 +36,22 @@ spec:
           image: dckr/haproxy-insights:v1
           imagePullPolicy: Always
           args:
-            - "--main-stack-name {{ env_name }}"
+            - --main-stack-name {{ env_name }}
           env:
             - name: SERVICE_NAME
               value: haproxy-insights
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /
               port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 5
           ports:
             - containerPort: 5000
           resources:
