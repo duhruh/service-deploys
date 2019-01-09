@@ -29,6 +29,8 @@ spec:
         app: haproxy-insights
     spec:
       restartPolicy: Always
+      imagePullSecrets:
+      - name: dckrio-hub-credentials
       containers:
         - name: app
           image: dckr/haproxy-insights:v1

@@ -19,7 +19,6 @@ spec:
       restartPolicy: Always
       imagePullSecrets:
       - name: dckrio-hub-credentials
-      restartPolicy: Always
       volumes:
         - name: prometheus-text-exporter
           hostPath:
