@@ -36,7 +36,7 @@ spec:
           image: dckr/haproxy-insights:v1
           imagePullPolicy: Always
           args:
-            - "--main-stack-name {{ config_name }}"
+            - "--main-stack-name {{ env_name }}"
           env:
             - name: SERVICE_NAME
               value: haproxy-insights
