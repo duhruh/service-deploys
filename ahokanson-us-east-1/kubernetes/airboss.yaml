@@ -30,14 +30,7 @@ spec:
           containers:
           - name: airboss
             image: dckr/airboss:v9
-            args:
-              - --ucp-url {{ ucp_root_url }}
-              - --ucp-http-connect-timeout 3
-              - --ucp-http-read-timeout 27
-              - --blacklist dtr,manager,default,kube-public,kube-system
-              - --remove-dead-nodes
-              - --verbosity 4
-              - --aws-verbosity 3
+            args: ['--ucp-url', '{{ ucp_root_url }}', '--ucp-http-connect-timeout', '3', '--ucp-http-read-timeout', '27', '--blacklist', 'dtr,manager,default,kube-public,kube-system', '--remove-dead-nodes', '--verbosity', '4', '--aws-verbosity', '3']
             volumeMounts:
               - name: ucp-credentials
                 readOnly: true
