@@ -33,7 +33,7 @@ spec:
       - name: dckrio-hub-credentials
       containers:
         - name: app
-          image: dckr/haproxy-insights:v1
+          image: dckr/haproxy-insights:v2
           imagePullPolicy: Always
           args: ['--main-stack-name', '{{ env_name }}']
           env:
