@@ -33,21 +33,21 @@ spec:
       - name: dckrio-hub-credentials
       containers:
         - name: app
-          image: dckr/haproxy-insights:v2
+          image: dckr/haproxy-insights:v3
           imagePullPolicy: Always
-          args: ['--main-stack-name', '{{ env_name }}']
+          args: ['--main-stack-name', '{{ env_name }}', '--verbosity', '3']
           env:
             - name: SERVICE_NAME
               value: haproxy-insights
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 5
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 5
@@ -55,7 +55,7 @@ spec:
             - containerPort: 5000
           resources:
             limits:
-              cpu: 50m
+              cpu: 250m
               memory: 64M
             requests:
               cpu: 50m
