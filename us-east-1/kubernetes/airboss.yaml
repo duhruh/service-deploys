@@ -31,7 +31,7 @@ spec:
           - name: airboss
             image: dckr/airboss:v9
             args:
-              - --ucp-url={{ ucp_root_url }}
+              - --ucp-url=https://{{ ucp_domain_name }}
               - --ucp-http-connect-timeout=3
               - --ucp-http-read-timeout=27
               - --blacklist=dtr,manager,default,kube-public,kube-system
