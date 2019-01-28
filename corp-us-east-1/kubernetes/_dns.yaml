@@ -4,4 +4,5 @@ metadata:
   name: kube-dns
   namespace: kube-system
 data:
-  upstreamNameservers: '["169.254.169.253","1.1.1.1","1.0.0.1","8.8.8.8","8.8.4.4"]'
+  upstreamNameservers: '["169.254.169.253","1.1.1.1","1.0.0.1"]' # cannot have more than 3 entries here
+
