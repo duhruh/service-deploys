@@ -31,7 +31,7 @@ spec:
       serviceAccountName: bosun
       containers:
         - name: app
-          image: dckr/bosun-application:v2
+          image: dckr/bosun-application:v3
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
