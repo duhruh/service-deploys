@@ -96,7 +96,7 @@ spec:
 
       containers:
         - name: haproxy
-          image: dckr/haproxy-haproxy:v5
+          image: dckr/haproxy-haproxy:v4
           imagePullPolicy: IfNotPresent
           readinessProbe:
             httpGet:
