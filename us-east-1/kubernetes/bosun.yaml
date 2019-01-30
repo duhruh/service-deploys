@@ -1,0 +1,89 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bosun-cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: bosun
+  namespace: infra-k8s
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: bosun
+  namespace: infra-k8s
+spec:
+  selector:
+    matchLabels:
+      app: bosun
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bosun
+      annotations:
+        prometheus.io/scrape: 'true'
+    spec:
+      serviceAccountName: bosun
+      containers:
+        - name: app
+          image: dckr/bosun-application:v3
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          args:
+            - --ucp-domain-name={{ ucp_domain_name }}
+            - --repository-sync=git@github.com:docker-infra/service-deploys.git
+            - --branch-sync=master
+            - --dir-sync={{ env_name }}
+            - --saltstack-secret-path=/saltstack-github-credentials/credentials
+            - --work-interval=60
+            - --verbosity=4
+            - --kubectl-verbosity=3
+            - --sh-verbosity=2
+            - --aws-verbosity=2
+          volumeMounts:
+            - name: saltstack-github-credentials
+              readOnly: true
+              mountPath: '/saltstack-github-credentials'
+            - name: ucp-credentials
+              readOnly: true
+              mountPath: '/ucp-credentials'
+        - name: secrets
+          image: dckr/bosun-secrets-pass:v1
+          imagePullPolicy: Always
+          args:
+            - --repository-sync=git@github.com:docker-infra/pass-store.git
+            - --pass-secret-path=/pass-github-credentials/credentials
+            - --gpg-secret-path=/gpg-credentials/credentials
+            - --branch-sync=master
+            - --sync-interval=30
+            - --verbosity=4
+            - --sh-verbosity=2
+          volumeMounts:
+            - name: pass-github-credentials
+              readOnly: true
+              mountPath: '/pass-github-credentials'
+            - name: gpg-credentials
+              readOnly: true
+              mountPath: '/gpg-credentials'
+      volumes:
+        - name: saltstack-github-credentials
+          secret:
+            secretName: saltstack-github-credentials
+        - name: pass-github-credentials
+          secret:
+            secretName: pass-github-credentials
+        - name: gpg-credentials
+          secret:
+            secretName: gpg-credentials
+        - name: ucp-credentials
+          secret:
+            secretName: ucp-credentials
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dckrio-hub-credentials
