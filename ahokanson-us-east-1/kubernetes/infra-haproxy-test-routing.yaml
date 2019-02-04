@@ -9,7 +9,7 @@ spec:
   type: NodePort
   ports:
     - port: 80
-      nodePort: 32771
+      nodePort: 32776
   selector:
     app: infra-haproxy-test-routing
 
