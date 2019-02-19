@@ -1,0 +1,30 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: jenkins-curator
+  namespace: infra-k8s
+spec:
+  schedule: "@daily"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: curator
+            configMap:
+              name: curator-jenkins
+          containers:
+          - name: jenkins-curator
+            image: bobrik/curator
+            command: --config /app/curator.yml /app/action.yml
+            volumeMounts:
+            - name: curator
+              mountPath: /app/curator.yml
+              subPath: curator.yml
+              readOnly: true
+            - name: curator
+              mountPath: /app/action.yml
+              subPath: action.yml
+              readOnly: true
+          restartPolicy: Never
